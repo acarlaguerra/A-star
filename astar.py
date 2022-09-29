@@ -1,3 +1,4 @@
+#inicializando a matriz de distâncias diretas em linha reta
 distances = [
     
         [0,    10,   18.5, 24.8, 36.4, 38.8, 35.8, 25.4, 17.6, 9.1,  16.7, 27.3, 27.6, 29.8], # Estação E1
@@ -16,11 +17,12 @@ distances = [
         [29.8, 21.8, 16.6, 15.4, 17.9, 18.2, 15.6, 27.6, 26.6, 21.2, 35.5, 33.6, 5.1,  0]     # Estação E14
     ]
 
+#multiplicando a matriz de distâncias por 2, para resgatar o tempo entre as estações
 def multiplication(matrix):
     return [[element * 2 for element in line] for line in matrix]
 
     
-#matriz das distâncias reais e nós adjacentes
+#matriz das distâncias reais e nós adjacentes já multiplicadas por 2 pelo mesmo motivo
 matrix_dist = {
     1 : [(2, 20, 'azul')], #'2' refere-se a E2
     2 : [(3, 17, 'azul'), (1, 20, 'azul'), (9, 20, 'amarela'), (10, 7, 'amarela')], #'3' refere-se a E3; '1' refere-se a E1; '9' refere-se a E9;
@@ -38,10 +40,8 @@ matrix_dist = {
     14: [(13, 10.2, 'verde')]
 }
 
-## ENCAIXAR TEMPO DE TROCAR DE LINHA
-
+#função para identificar os nós adjacentes e as distâncias reais entre eles
 def get_neighbors(v):
-    #função para identificar os nós adjacentes e as distâncias reais entre eles
     if v in matrix_dist:
         return matrix_dist[v]
     else:
@@ -49,60 +49,49 @@ def get_neighbors(v):
 
 
 def AStar(start_node, stop_node):
-    open_set = []
-    open_set.append(start_node)         #inicializando o conjunto de busca
-    closed_set = []
-    g_sum = {}                          #computa a distância com o nó inicial
-    parents = {}                        #dicionário que contém nós adjacentes
-    g_sum[start_node] = 0               #distancia do nó inicial pra ele mesmo é 0
-    parents[start_node] = start_node    #o nó inicial é o que vai ser pai de todos os outros
+    search_list = []                        #construindo a fronteira, a qual será nosso conjunto de busca
+    search_list.append(start_node)          #inicializando o conjunto de busca
+    final_list = []
+    g_sum = {}                              #computa a distância com o nó inicial
+    parents = {}                            #dicionário que contém nós adjacentes
+    g_sum[start_node] = 0                   #distancia do nó inicial pra ele mesmo é 0
+    parents[start_node] = start_node        #o nó inicial é o que vai ser mãe de todos os outros
 
     heuristic_funct = multiplication(distances)
-    # print("Aqui:")
-    # print(*open_set)
-    while len(open_set) > 0: #enquanto o conjunto não estiver vazio
+    while len(search_list) > 0: #enquanto o conjunto não estiver vazio
         n = None
+
         #pretende-se achar o nó com o menor tempo
-       
-        for v in open_set:
-            # print("Lista: ")
-            # print(v)
-            # print(f'gsum v : {g_sum[v]}')
-            # print(f'heuristic : {heuristic_funct[v[0] - 1][stop_node[0] - 1]}')
+        for v in search_list:
             if n == None or g_sum[v] + heuristic_funct[v[0] - 1][stop_node[0] - 1] < g_sum[n] + heuristic_funct[n[0] - 1][stop_node[0] - 1]:
                 n = v
                 print(f'Nó atual: {n}')
-        #se n é o nó de destino, ignoramos
-       # print(f"n: {n}")
-       # print(stop_node)
-       # print("Matriz: ")
-       # print(matrix_dist[n[0]])
-        # print(*matrix_dist)
 
+        #se n é o nó de destino, ignoramos
         if n == stop_node or matrix_dist[n[0]] == None:
             pass
         else:
             #já que ele não é nó destino, vamos checar seus adjacentes
-            for (m, distance, line) in get_neighbors(n[0]): #(1, azul)
-                vec = (m, line) #(linha, cor)
+            for (m, distance, line) in get_neighbors(n[0]): #(1, 20, azul)
+                vec = (m, line) #(numero da linha, cor)
                 #se m ainda não está no conjunto de busca, adicionamos
-                if vec not in open_set and vec not in closed_set:
-                    open_set.append(vec)                #adicionando
-                    print(f'Fronteira: {open_set}')
+                if vec not in search_list and vec not in final_list:
+                    search_list.append(vec)                #adicionando
+                    print(f'Fronteira: {search_list}')
                     parents[vec] = n                  #setando n como mãe desse nó
                     g_sum[vec] = g_sum[n] + distance  #calculando a função G para o determinado nó
                     if n[1] != vec[1]: #verifica se ele muda de linha
                         g_sum[vec] += 4
 
-                #para cada nó já incluído no conjunto, compara com a distância inicial para conferir que é o menor
+                #para cada nó já incluído no conjunto, compara com a distância inicial para conferir qual é o menor
                 else:
                     if g_sum[vec] > g_sum[n] + distance:
                         g_sum[vec] = g_sum[n] + distance
                         parents[vec] = n 
-                        #atualiza o nó caso ele tenha um tempo menor e seja o último da lista
-                        if m in closed_set:
-                            closed_set.remove(vec)
-                            open_set.append(vec)
+                        #atualiza o nó caso ele tenha um tempo menor e seja o último da lista(estava definido como nó destino)
+                        if m in final_list:
+                            final_list.remove(vec)
+                            search_list.append(vec)
 
         if n == None:
             print('Tá fazendo o quê aqui ainda? Caminho não encontrado!') 
@@ -121,9 +110,9 @@ def AStar(start_node, stop_node):
             print(f'Tempo final: {g_sum[v] + heuristic_funct[v[0] - 1][stop_node[0] - 1]} minutos')
             return path
         
-        #como todos os adjacentes de n foram analisados, retira ele do conjunto
-        open_set.remove(n)
-        closed_set.append(n)
+        #como todos os adjacentes de n foram analisados, retiramos ele do conjunto
+        search_list.remove(n)
+        final_list.append(n)
 
     print('Caminho não encontrado, recalculando a rota!')
     return None
