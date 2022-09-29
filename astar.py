@@ -19,8 +19,6 @@ distances = [
 def multiplication(matrix):
     return [[element * 2 for element in line] for line in matrix]
 
-
-
     
 #matriz das distâncias reais e nós adjacentes
 matrix_dist = {
@@ -73,14 +71,14 @@ def AStar(start_node, stop_node):
             # print(f'heuristic : {heuristic_funct[v[0] - 1][stop_node[0] - 1]}')
             if n == None or g_sum[v] + heuristic_funct[v[0] - 1][stop_node[0] - 1] < g_sum[n] + heuristic_funct[n[0] - 1][stop_node[0] - 1]:
                 n = v
-                print(n)
+                print(f'Nó atual: {n}')
         #se n é o nó de destino, ignoramos
        # print(f"n: {n}")
        # print(stop_node)
        # print("Matriz: ")
        # print(matrix_dist[n[0]])
         # print(*matrix_dist)
-        
+
         if n == stop_node or matrix_dist[n[0]] == None:
             pass
         else:
@@ -89,7 +87,8 @@ def AStar(start_node, stop_node):
                 vec = (m, line) #(linha, cor)
                 #se m ainda não está no conjunto de busca, adicionamos
                 if vec not in open_set and vec not in closed_set:
-                    open_set.append(vec)                 #adicioando
+                    open_set.append(vec)                #adicionando
+                    print(f'Fronteira: {open_set}')
                     parents[vec] = n                  #setando n como mãe desse nó
                     g_sum[vec] = g_sum[n] + distance  #calculando a função G para o determinado nó
                     if n[1] != vec[1]: #verifica se ele muda de linha
@@ -119,6 +118,7 @@ def AStar(start_node, stop_node):
             path.append(start_node) #adicionamos o nó mãe por último
             path.reverse() #revertemos o caminho pois fizemos de trás pra frente que nem curupira
             print('OK Google: o caminho a se seguir é {}'.format(path))
+            print(f'Tempo final: {g_sum[v] + heuristic_funct[v[0] - 1][stop_node[0] - 1]} minutos')
             return path
         
         #como todos os adjacentes de n foram analisados, retira ele do conjunto
@@ -129,6 +129,6 @@ def AStar(start_node, stop_node):
     return None
 
 def main():
-    AStar((1, "azul"), (13, "verde"))
+    AStar((6, "azul"), (13, "verde"))
 
 main()
